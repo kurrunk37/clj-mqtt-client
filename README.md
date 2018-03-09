@@ -7,7 +7,7 @@ Clojure MQTT client, based on [mqtt-client](https://github.com/fusesource/mqtt-c
 Leiningen dependency information:
 
 ```clojure
-[huzhengquan/clj-mqtt-client "0.1.3"]
+[huzhengquan/clj-mqtt-client "0.1.4"]
 ```
 
 ## Usage

@@ -25,7 +25,7 @@
              connect-on-success
              connect-on-failure ]
       :or {listener-on-connected (fn [] (log Level/INFO "mqtt listener connected"))
-           listener-on-publish (fn [^String topic ^bytes payload] (log Level/INFO "mqtt listener new message: " topic :payload (count payload)))
+           listener-on-publish (fn [^String topic ^bytes payload] (log Level/INFO "mqtt listener new message: " topic :payload-size (count payload)))
            listener-on-disconnected (fn [] (log Level/WARNING "mqtt listener disconnected"))
            listener-on-failure (fn [^Throwable e] (.printStackTrace e))
            connect-on-success (fn [_] (log Level/INFO "mqtt connect success"))
@@ -44,7 +44,7 @@
               (try+
                 (let [topic (.toString (.utf8 buffer-topic))
                       payload (.toByteArray buffer-payload)]
-                  (log Level/INFO "mqtt new message:" topic :payload-size (count payload))
+                  ;(log Level/INFO "mqtt new message:" topic :payload-size (count payload))
                   (listener-on-publish topic payload)
                   (.run ack))))))
         (.connect 
