@@ -1,16 +1,43 @@
 # clj-mqtt-client
 
-clojure MQTT client, callback/continuations passing API style.
+Clojure MQTT client, based on [mqtt-client](https://github.com/fusesource/mqtt-client), Applications can use a blocking API style, or a callback/continuations passing API style.
 
 ## Installation
 
 Leiningen dependency information:
 
 ```clojure
-[huzhengquan/clj-mqtt-client "0.1.1"]
+[huzhengquan/clj-mqtt-client "0.1.2"]
 ```
 
 ## Usage
+
+### Using the Blocking API
+
+```clojure
+(require '[clj-mqtt-client.blocking :as mqtt])
+
+(let [conn (mqtt/connect :uri "tcp://0.0.0.0:1886"
+                         :user-name "xxx"
+                         :password "xxx"
+                         :client-id "xxx")]
+  ; publish message
+  (mqtt/publish conn "topic" "payload")
+  ; publish opts
+  (mqtt/publish conn "topic" "payload" :qos 1 :retain false)
+  ; subscribe
+  (mqtt/subscribe conn [["topic1" 1] ["topic2" 2]])
+  ; receive
+  (loop []
+    (let [message (mqtt/receive conn)]
+      ; message => {:topic "topic1" :payload "payload" }
+      )
+    (recur))
+  ; disconnect
+  (mqtt/disconnect conn))
+```
+
+### Using the Callback/Continuation Passing based API
 
 ```clojure
 (require '[clj-mqtt-client.callback :as mqtt])
@@ -26,6 +53,8 @@ Leiningen dependency information:
                          )]
   ; publish message
   (mqtt/publish conn "topic" "payload")
+  ; publish opts
+  (mqtt/publish conn "topic" "payload" :qos 1 :retain false)
   ; subscribe
   (mqtt/subscribe conn [["topic" 1] ["topic2" 2]])
   ; disconnect
@@ -33,7 +62,7 @@ Leiningen dependency information:
   )
 ```
 
-### MQTT Configuration
+### MQTT connect Configuration
 
 | Options                   | Default                  | Description                    |
 | ------------------------- | ------------------------ | ------------------------------ |
