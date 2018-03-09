@@ -7,7 +7,7 @@ Clojure MQTT client, based on [mqtt-client](https://github.com/fusesource/mqtt-c
 Leiningen dependency information:
 
 ```clojure
-[huzhengquan/clj-mqtt-client "0.1.2"]
+[huzhengquan/clj-mqtt-client "0.1.3"]
 ```
 
 ## Usage
@@ -22,19 +22,26 @@ Leiningen dependency information:
                          :password "xxx"
                          :client-id "xxx")]
   ; publish message
-  (mqtt/publish conn "topic" "payload")
+  (mqtt/publish conn "topic" (.getBytes "payload"))
   ; publish opts
-  (mqtt/publish conn "topic" "payload" :qos 1 :retain false)
+  (mqtt/publish conn "topic" (.getBytes "payload") :qos 1 :retain false)
   ; subscribe
   (mqtt/subscribe conn [["topic1" 1] ["topic2" 2]])
   ; receive
   (loop []
-    (let [message (mqtt/receive conn)]
-      ; message => {:topic "topic1" :payload "payload" }
+    (let [{:keys [topic payload]} (mqtt/receive conn)]
+      ; topic ^String "topic1"
+      ; payload ^bytes xxx 
+      (println topic (new String payload "utf-8"))
       )
     (recur))
   ; disconnect
-  (mqtt/disconnect conn))
+  (mqtt/disconnect conn)
+  ; unsubscribe
+  (mqtt/unsubscribe conn ["topic1" "topic2"])
+  ; connected?
+  (mqtt/connected? conn)
+  )
 ```
 
 ### Using the Callback/Continuation Passing based API
@@ -47,14 +54,14 @@ Leiningen dependency information:
                          :user-name "xxx"
                          :password "xxx"
                          :client-id "xxx"
-                         :listener-on-publish (fn [topic payload] 
+                         :listener-on-publish (fn [^String topic ^byte payload] 
                                                 ; new message
                                                 )
                          )]
   ; publish message
-  (mqtt/publish conn "topic" "payload")
+  (mqtt/publish conn "topic" (.getBytes "payload"))
   ; publish opts
-  (mqtt/publish conn "topic" "payload" :qos 1 :retain false)
+  (mqtt/publish conn "topic" (.getBytes "payload") :qos 1 :retain false)
   ; subscribe
   (mqtt/subscribe conn [["topic" 1] ["topic2" 2]])
   ; disconnect

@@ -1,6 +1,7 @@
 (ns clj-mqtt-client.callback
   (:require [clj-mqtt-client.mqtt :as mqtt-core])
   (:import [org.fusesource.mqtt.client MQTT CallbackConnection QoS Topic Listener Callback]
+           [org.fusesource.hawtbuf UTF8Buffer Buffer]
            [java.util.logging Logger Level]))
 
 (def logger ^Logger (Logger/getLogger "mqtt-client"))
@@ -24,7 +25,7 @@
              connect-on-success
              connect-on-failure ]
       :or {listener-on-connected (fn [] (log Level/INFO "mqtt listener connected"))
-           listener-on-publish (fn [^String topic _] (log Level/INFO "mqtt listener new message: " topic))
+           listener-on-publish (fn [^String topic ^bytes payload] (log Level/INFO "mqtt listener new message: " topic :payload (count payload)))
            listener-on-disconnected (fn [] (log Level/WARNING "mqtt listener disconnected"))
            listener-on-failure (fn [^Throwable e] (.printStackTrace e))
            connect-on-success (fn [_] (log Level/INFO "mqtt connect success"))
@@ -39,11 +40,11 @@
             (^void onConnected [this] (try+ (listener-on-connected )))
             (^void onDisconnected [this] (try+ (listener-on-disconnected )))
             (^void onFailure [this ^Throwable e] (try+ (listener-on-failure e)))
-            (^void onPublish [this ^org.fusesource.hawtbuf.UTF8Buffer buffer-topic ^org.fusesource.hawtbuf.Buffer buffer-payload ^Runnable ack]
+            (^void onPublish [this ^UTF8Buffer buffer-topic ^Buffer buffer-payload ^Runnable ack]
               (try+
                 (let [topic (.toString (.utf8 buffer-topic))
-                      payload (.toString (.utf8 buffer-payload))]
-                  (log Level/INFO "mqtt new message:" topic (if (> (count payload) 100) (str (subs payload 0 100) "...") payload))
+                      payload (.toByteArray buffer-payload)]
+                  (log Level/INFO "mqtt new message:" topic :payload-size (count payload))
                   (listener-on-publish topic payload)
                   (.run ack))))))
         (.connect 
@@ -65,7 +66,7 @@
         (^void onFailure [this ^Throwable e] (try+ (on-failure e)))))))
 
 (defn publish
-  [^CallbackConnection connection ^String topic ^String payload
+  [^CallbackConnection connection ^String topic ^bytes payload
    & {:keys [^long qos ^boolean retain on-success on-failure]
       :or {qos 1
            retain false
@@ -75,7 +76,7 @@
     (.publish 
       connection
       ^String topic
-      (.getBytes payload)
+      ^bytes payload
       ^QoS (mqtt-core/long->qos qos)
       ^boolean retain
       (reify Callback
@@ -93,4 +94,30 @@
       (reify Callback
         (^void onSuccess [this v] (try+ (on-success v)))
         (^void onFailure [this ^Throwable e] (try+ (on-failure e) ))))))
+
+(defn suspend
+  [^CallbackConnection connection]
+  (.suspend connection))
+
+(defn resume
+  [^CallbackConnection connection]
+  (.resume connection))
+
+(defn unsubscribe
+  [^CallbackConnection connection topics
+   & {:keys [on-success on-failure]
+      :or {on-success (fn [_] (log Level/INFO "mqtt unsubscribe success" ))
+           on-failure (fn [^Throwable e] (.printStackTrace e))}}]
+  (try+
+    (.unsubscribe
+      connection
+      (into-array UTF8Buffer (for [topic topics] (Buffer/utf8 topic)))
+      (reify Callback
+        (^void onSuccess [this v] (try+ (on-success v)))
+        (^void onFailure [this ^Throwable e] (try+ (on-failure e) ))))))
+
+(defn ^Throwable failure
+  [^CallbackConnection connection]
+  (.failure connection))
+  
 
