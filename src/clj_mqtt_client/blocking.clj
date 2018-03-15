@@ -2,6 +2,8 @@
   (:require [clj-mqtt-client.mqtt :as mqtt-core])
   (:import [org.fusesource.mqtt.client MQTT BlockingConnection QoS Topic Message]))
 
+(set! *warn-on-reflection* true)
+
 (defn ^BlockingConnection connect
   [& {:as opts}]
   (let [conn (.blockingConnection ^MQTT (mqtt-core/create opts))]
@@ -11,35 +13,28 @@
 (defn ^bytes subscribe
   [^BlockingConnection connection topics]
   (.subscribe 
-    ^BlockingConnection connection 
-    (into-array Topic (for [[topic qos] topics] (new Topic topic (mqtt-core/long->qos qos))))))
+    connection 
+    (into-array Topic (for [[^String topic ^long qos] topics] (new Topic topic ^QoS (mqtt-core/long->qos qos))))))
 
 (defn publish
   [^BlockingConnection connection ^String topic ^bytes payload
-   & {:keys [^long qos ^boolean retain]
-      :or {qos 1
-           retain false}}]
+   & {:keys [^long qos ^Boolean retain]
+      :or {^long qos 1
+           ^Boolean retain false}}]
   (.publish 
-    ^BlockingConnection connection
-    ^String topic
-    ^bytes payload
+    connection
+    topic
+    payload
     ^QoS (mqtt-core/long->qos qos)
-    ^boolean retain))
+    retain))
 
-(defn receive
+(defn ^clojure.lang.IPersistentMap receive
   [^BlockingConnection connection 
    & {:keys [fields]
       :or {fields [:topic :payload] }}]
-  (let [message (.receive connection)
-        return (into {} (map (fn [k]
-                               {k (case k
-                                    :topic (.getTopic ^Message message)
-                                    :payload (.getPayload ^Message message)
-                                    nil
-                                    ) })
-                             fields))]
-    (.ack ^Message message)
-    return))
+  (let [^Message message (.receive connection)]
+    (.ack message)
+    (mqtt-core/msg->coll message :fields fields)))
 
 (defn disconnect
   [^BlockingConnection connection ]

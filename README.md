@@ -1,13 +1,13 @@
 # clj-mqtt-client
 
-Clojure MQTT client, based on [mqtt-client](https://github.com/fusesource/mqtt-client), Applications can use a blocking API style, or a callback/continuations passing API style.
+Clojure MQTT client, based on [mqtt-client](https://github.com/fusesource/mqtt-client), Applications can use a blocking API style, a futures based API, or a callback/continuations passing API style.
 
 ## Installation
 
 Leiningen dependency information:
 
 ```clojure
-[huzhengquan/clj-mqtt-client "0.1.4"]
+[huzhengquan/clj-mqtt-client "0.1.5"]
 ```
 
 ## Usage
@@ -68,6 +68,35 @@ Leiningen dependency information:
   (mqtt/disconnect conn)
   )
 ```
+
+### Using the Future based API
+
+```clojure
+(require '[clj-mqtt-client.future :as mqtt])
+
+; create connection
+(let [conn (mqtt/future-connection :uri "tcp://0.0.0.0:1886" ...)]
+
+  ; connect
+  (let [f (mqtt/connect conn)]
+    (.await f))
+  ; publish
+  (let [f (mqtt/publish conn "topic" (.getBytes "payload"))]
+    (.await f))
+  ; subscribe
+  (let [f (mqtt/subscribe conn [["topic" 1] ["topic2" 2]])]
+    (.await f))
+  ; receive
+  (let [f (mqtt/receive conn)
+        msg (mqtt/read-message f)]
+    ; ...
+    )
+  ; disconnect
+  (let [f (mqtt/disconnect conn)]
+    (.await f))
+  )
+```
+
 
 ### MQTT connect Configuration
 

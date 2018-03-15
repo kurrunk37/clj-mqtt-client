@@ -1,6 +1,8 @@
 (ns clj-mqtt-client.mqtt
-  (:import [org.fusesource.mqtt.client MQTT CallbackConnection QoS Topic Listener Callback]
+  (:import [org.fusesource.mqtt.client MQTT QoS Topic Message]
            [java.util.logging Logger Level]))
+
+(set! *warn-on-reflection* true)
 
 (defn ^QoS long->qos
   ([^long long-qos] (long->qos long-qos QoS/AT_MOST_ONCE))
@@ -42,3 +44,14 @@
         :reconnect-delay-max (.setReconnectDelayMax mqtt v)
         nil))
     mqtt))
+
+(defn msg->coll 
+  [^Message msg & {:keys [fields] :or {fields [:topic :payload]}}]
+  (into {} (map (fn [k]
+                  {k (case k
+                       :topic (.getTopic msg)
+                       :payload (.getPayload msg)
+                       nil
+                       ) })
+                fields)))
+

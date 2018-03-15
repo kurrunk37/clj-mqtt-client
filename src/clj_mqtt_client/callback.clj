@@ -4,11 +4,13 @@
            [org.fusesource.hawtbuf UTF8Buffer Buffer]
            [java.util.logging Logger Level]))
 
-(def logger ^Logger (Logger/getLogger "mqtt-client"))
+(set! *warn-on-reflection* true)
+
+(def ^Logger logger (Logger/getLogger "mqtt-client"))
 
 (defn- log 
   [^Level level & messages]
-  (.log ^Logger logger ^Level level (str messages)))
+  (.log logger level (str messages)))
 
 (defmacro try+
   [& body]
@@ -60,25 +62,25 @@
   (try+
     (.subscribe 
       connection 
-      (into-array Topic (for [[topic qos] topics] (new Topic topic (mqtt-core/long->qos qos))))
+      (into-array Topic (for [[^String topic ^long qos] topics] (new Topic topic ^QoS (mqtt-core/long->qos qos))))
       (reify Callback
         (^void onSuccess [this qoses] (try+ (on-success qoses)))
         (^void onFailure [this ^Throwable e] (try+ (on-failure e)))))))
 
 (defn publish
   [^CallbackConnection connection ^String topic ^bytes payload
-   & {:keys [^long qos ^boolean retain on-success on-failure]
-      :or {qos 1
-           retain false
+   & {:keys [^long qos ^Boolean retain on-success on-failure]
+      :or {^long qos 1
+           ^Boolean retain false
            on-success (fn [_] (log Level/INFO "mqtt publish success" ))
            on-failure (fn [^Throwable e] (.printStackTrace e))}}]
   (try+
     (.publish 
       connection
-      ^String topic
-      ^bytes payload
+      topic
+      payload
       ^QoS (mqtt-core/long->qos qos)
-      ^boolean retain
+      retain
       (reify Callback
         (^void onSuccess [this qoses] (try+ (on-success qoses)))
         (^void onFailure [this ^Throwable e] (try+ (on-failure e) ))))))
@@ -111,7 +113,7 @@
   (try+
     (.unsubscribe
       connection
-      (into-array UTF8Buffer (for [topic topics] (Buffer/utf8 topic)))
+      (into-array UTF8Buffer (for [^String topic topics] (Buffer/utf8 topic)))
       (reify Callback
         (^void onSuccess [this v] (try+ (on-success v)))
         (^void onFailure [this ^Throwable e] (try+ (on-failure e) ))))))
