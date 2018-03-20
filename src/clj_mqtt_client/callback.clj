@@ -44,10 +44,8 @@
             (^void onFailure [this ^Throwable e] (try+ (listener-on-failure e)))
             (^void onPublish [this ^UTF8Buffer buffer-topic ^Buffer buffer-payload ^Runnable ack]
               (try+
-                (let [topic (.toString (.utf8 buffer-topic))
-                      payload (.toByteArray buffer-payload)]
-                  ;(log Level/INFO "mqtt new message:" topic :payload-size (count payload))
-                  (listener-on-publish topic payload)
+                (do
+                  (listener-on-publish (.toString (.utf8 buffer-topic)) (.toByteArray buffer-payload))
                   (.run ack))))))
         (.connect 
           (reify Callback

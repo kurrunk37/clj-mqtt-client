@@ -1,4 +1,4 @@
-(defproject huzhengquan/clj-mqtt-client "0.1.5"
+(defproject huzhengquan/clj-mqtt-client "0.1.6"
   :description "Clojure MQTT client, Applications can use a blocking API style, a futures based API, or a callback/continuations passing API style."
   :url "https://github.com/huzhengquan/clj-mqtt-client"
   :license {:name "Eclipse Public License"
