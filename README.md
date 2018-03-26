@@ -7,7 +7,7 @@ Clojure MQTT client, based on [mqtt-client](https://github.com/fusesource/mqtt-c
 Leiningen dependency information:
 
 ```clojure
-[huzhengquan/clj-mqtt-client "0.1.6"]
+[huzhengquan/clj-mqtt-client "0.1.7"]
 ```
 
 ## Usage
@@ -22,7 +22,7 @@ Leiningen dependency information:
                          :password "xxx"
                          :client-id "xxx")]
   ; publish message
-  (mqtt/publish conn "topic" (.getBytes "payload"))
+  (mqtt/publish conn "topic" (.getBytes "payload" "UTF-8"))
   ; publish opts
   (mqtt/publish conn "topic" (.getBytes "payload") :qos 1 :retain false)
   ; subscribe
@@ -54,12 +54,12 @@ Leiningen dependency information:
                          :user-name "xxx"
                          :password "xxx"
                          :client-id "xxx"
-                         :listener-on-publish (fn [^String topic ^byte payload] 
+                         :listener-on-publish (fn [^String topic ^bytes payload] 
                                                 ; new message
                                                 )
                          )]
   ; publish message
-  (mqtt/publish conn "topic" (.getBytes "payload"))
+  (mqtt/publish conn "topic" (.getBytes "payload" "UTF-8"))
   ; publish opts
   (mqtt/publish conn "topic" (.getBytes "payload") :qos 1 :retain false)
   ; subscribe
@@ -100,29 +100,30 @@ Leiningen dependency information:
 
 ### MQTT connect Configuration
 
-| Options                   | Default                  | Description                    |
-| ------------------------- | ------------------------ | ------------------------------ |
-| :uri                      | "tcp://127.0.0.1:1883"   |                                |
-| :user-name                |                          |                                |
-| :password                 |                          |                                |
-| :client-id                |                          |                                |
-| :keep-alive               |                          |                                |
-| :receive-buffer-size      | 65536                    |                                |
-| :send-buffer-size         | 65536                    |                                |
-| :use-local-host           | true                     |                                |
-| :local-address            |                          |                                |
-| :reconnect-delay          | 10                       |                                |
-| :reconnect-delay-max      | 30000                    |                                |
-| :reconnect-attempts-max   | -1                       |                                |
-| :connect-attempts-max     | -1                       |                                |
-| :clean-session            |                          |                                |
-| :will-message             |                          |                                |
-| :will-qos                 |                          |                                |
-| :will-topic               |                          |                                |
-| :will-retain              |                          |                                |
-| :version                  | "3.1"                    |                                |
-| :max-read-rate            | 0                        |                                |
-| :max-write-rate           | 0                        | maximum bytes per second       |
+| Options                   | Default                  | Description                                                                                       |
+| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------- |
+| :uri                      | "tcp://127.0.0.1:1883"   |                                                                                                   |
+| :user-name                |                          |                                                                                                   |
+| :password                 |                          |                                                                                                   |
+| :client-id                |                          |                                                                                                   |
+| :clean-session            | true                     |                                                                                                   |
+| :keep-alive               | 30                       | Configures the Keep Alive timer in seconds.                                                       |
+| :version                  | "3.1"                    | Set to "3.1.1" to use MQTT version 3.1.1.                                                         |
+| :will-message             | ""                       | The Will message to send.                                                                         |
+| :will-qos                 | 0                        | Sets the quality of service to use for the Will message.                                          |
+| :will-topic               |                          |                                                                                                   |
+| :will-retain              |                          | Set to true if you want the Will to be published with the retain option.                          |
+| :receive-buffer-size      | 65536 (64k)              | Sets the size of the internal socket receive buffer.                                              |
+| :send-buffer-size         | 65536 (64k)              | Sets the size of the internal socket send buffer.                                                 |
+| :traffic-class            | 8                        | Sets traffic class or type-of-service octet in the IP header for packets sent from the transport. |
+| :use-local-host           | true                     |                                                                                                   |
+| :local-address            |                          |                                                                                                   |
+| :reconnect-delay          | 10                       | How long to wait in ms before the first reconnect attempt.                                        |
+| :reconnect-delay-max      | 30000                    | The maximum amount of time in ms to wait between reconnect attempts.                              |
+| :reconnect-attempts-max   | -1                       |                                                                                                   |
+| :connect-attempts-max     | -1                       |                                                                                                   |
+| :max-read-rate            | 0 (disable)              | Sets the maximum bytes per second that this transport will receive data at.                       |
+| :max-write-rate           | 0 (disable)              | Sets the maximum bytes per second that this transport will send data at.                          |
 
 more information : [mqtt-client](https://github.com/fusesource/mqtt-client)
 
